@@ -11,8 +11,8 @@ version = "0.1"
 paper {
     name = rootProject.name
     prefix = rootProject.name
-    main = "org.skyisland.bedrockdata.BedrockDataPlugin"
-    bootstrapper = "org.skyisland.bedrockdata.BedrockDataBootstrapper"
+    main = "org.skyisland.databarrel.DataBarrelPlugin"
+    bootstrapper = "org.skyisland.databarrel.DataBarrelBootstrap"
     apiVersion = "1.21"
     authors = listOf("sidey383")
     foliaSupported = true

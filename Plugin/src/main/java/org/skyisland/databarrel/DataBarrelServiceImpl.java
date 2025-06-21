@@ -1,4 +1,4 @@
-package org.skyisland.bedrockdata;
+package org.skyisland.databarrel;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.NotNull;
@@ -7,12 +7,12 @@ import org.jetbrains.annotations.Nullable;
 import java.io.Closeable;
 import java.util.Map;
 
-final class BedrockDataServiceImpl implements Closeable, BedrockDataService {
+final class DataBarrelServiceImpl implements Closeable, DataBarrelService {
 
     private final Map<String, HikariDataSource> hikariDataSourceMap;
     private boolean isOpen = true;
 
-    public BedrockDataServiceImpl(@NotNull Map<String, HikariDataSource> hikariDataSourceMap) {
+    public DataBarrelServiceImpl(@NotNull Map<String, HikariDataSource> hikariDataSourceMap) {
         this.hikariDataSourceMap = hikariDataSourceMap;
     }
 

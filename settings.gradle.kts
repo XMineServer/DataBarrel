@@ -1,4 +1,4 @@
-rootProject.name = "BedrockData"
+rootProject.name = "DataBarrel"
 include("SamplePlugin")
 include("SampleBootstrapPlugin")
 include("Plugin")

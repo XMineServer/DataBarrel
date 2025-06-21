@@ -1,4 +1,4 @@
-package org.skyisland.bedrockdata;
+package org.skyisland.databarrel;
 
 import com.zaxxer.hikari.HikariDataSource;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
@@ -8,9 +8,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-import org.skyisland.bedrockdata.config.DatabaseConfigReader;
-import org.skyisland.bedrockdata.datasource.HikariDataSourceFactory;
-import org.skyisland.bedrockdata.exception.BootstrapException;
+import org.skyisland.databarrel.config.DatabaseConfigReader;
+import org.skyisland.databarrel.datasource.HikariDataSourceFactory;
+import org.skyisland.databarrel.exception.BootstrapException;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -22,15 +22,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 @SuppressWarnings("UnstableApiUsage")
-public class BedrockDataBootstrapper implements PluginBootstrap {
+public class DataBarrelBootstrap implements PluginBootstrap {
 
     private static final HikariDataSourceFactory HIKARI_DATA_SOURCE_FACTORY = new HikariDataSourceFactory();
-    static BedrockDataServiceImpl bedrockDataService;
+    static DataBarrelServiceImpl bedrockDataService;
     private Logger logger;
 
     @Override
     public @NotNull JavaPlugin createPlugin(@NotNull PluginProviderContext context) {
-        return new BedrockDataPlugin(bedrockDataService);
+        return new DataBarrelPlugin(bedrockDataService);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class BedrockDataBootstrapper implements PluginBootstrap {
             logger.info("Load {} DataSource", config.name());
             hikariDataSources.put(config.name(), dataSource);
         }
-        bedrockDataService = new BedrockDataServiceImpl(hikariDataSources);
+        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources);
         registerShutdownHook();
     }
 
@@ -59,6 +59,7 @@ public class BedrockDataBootstrapper implements PluginBootstrap {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             if (bedrockDataService.isOpen()) {
                 bedrockDataService.close();
+                logger.warn("Disable DataBarrelService form shutdownHook");
             }
         }));
     }

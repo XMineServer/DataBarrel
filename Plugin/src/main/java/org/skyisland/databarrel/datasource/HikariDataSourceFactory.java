@@ -1,8 +1,8 @@
-package org.skyisland.bedrockdata.datasource;
+package org.skyisland.databarrel.datasource;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.skyisland.bedrockdata.config.DatabaseConfiguration;
+import org.skyisland.databarrel.config.DatabaseConfiguration;
 
 public class HikariDataSourceFactory {
 

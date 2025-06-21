@@ -1,20 +1,20 @@
-package org.skyisland.bedrockdata;
+package org.skyisland.databarrel;
 
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class BedrockDataPlugin extends JavaPlugin {
+public class DataBarrelPlugin extends JavaPlugin {
 
-    private final BedrockDataServiceImpl bedrockDataService;
+    private final DataBarrelServiceImpl bedrockDataService;
 
-    BedrockDataPlugin(BedrockDataServiceImpl bedrockDataService) {
+    DataBarrelPlugin(DataBarrelServiceImpl bedrockDataService) {
         this.bedrockDataService = bedrockDataService;
     }
 
     @Override
     public void onEnable() {
         getServer().getServicesManager().register(
-                BedrockDataService.class,
+                DataBarrelService.class,
                 bedrockDataService,
                 this,
                 ServicePriority.Highest);
@@ -25,6 +25,7 @@ public class BedrockDataPlugin extends JavaPlugin {
         getServer().getServicesManager().unregister(bedrockDataService);
         if (bedrockDataService.isOpen()) {
             bedrockDataService.close();
+            getSLF4JLogger().info("Disable DataBarrelService");
         }
     }
 

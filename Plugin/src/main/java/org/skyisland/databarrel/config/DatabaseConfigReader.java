@@ -1,4 +1,4 @@
-package org.skyisland.bedrockdata.config;
+package org.skyisland.databarrel.config;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package org.skyisland.bedrockdata;
+package org.skyisland.databarrel;
 
 import org.slf4j.Logger;
 
@@ -7,11 +7,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public final class BedrockDataTest {
+public final class DataBarrelTest {
 
-    private BedrockDataTest() {}
+    private DataBarrelTest() {}
 
-    public static void testConnection(Logger logger, String datasourceName, BedrockDataService service) {
+    public static void testConnection(Logger logger, String datasourceName, DataBarrelService service) {
         var dataSource = service.getHikariDataSource(datasourceName);
         if (dataSource == null) {
             logger.error("Can't found dataSource {}", datasourceName);

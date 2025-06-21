@@ -1,4 +1,4 @@
-package org.skyisland.bedrockdata.exception;
+package org.skyisland.databarrel.exception;
 
 public class BootstrapException extends RuntimeException {
 

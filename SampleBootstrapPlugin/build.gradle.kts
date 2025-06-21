@@ -10,14 +10,14 @@ group = "org.skyisland"
 version = "0.1"
 
 paper {
-    main = "org.skyisland.bedrockdata.sample.bootstrap.SampleBedrockDataPlugin"
-    bootstrapper = "org.skyisland.bedrockdata.sample.bootstrap.SampleBedrockDataPluginBootstrap"
+    main = "org.skyisland.databarrel.sample.bootstrap.SampleDataBarrelPlugin"
+    bootstrapper = "org.skyisland.databarrel.sample.bootstrap.SampleDataBarrelPluginBootstrap"
     apiVersion = "1.21"
     authors = listOf("sidey383")
     prefix = project.name
     foliaSupported = true
     bootstrapDependencies {
-        register("BedrockData") {
+        register("DataBarrel") {
             required = true
             load = PaperPluginDescription.RelativeLoadOrder.BEFORE
             joinClasspath = true
