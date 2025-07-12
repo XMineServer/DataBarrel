@@ -4,14 +4,17 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
-import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.skyisland.databarrel.config.DatabaseConfigReader;
+import org.skyisland.databarrel.config.S3ConfigReader;
 import org.skyisland.databarrel.datasource.HikariDataSourceFactory;
+import org.skyisland.databarrel.datasource.S3ClientFactory;
 import org.skyisland.databarrel.exception.BootstrapException;
 import org.slf4j.Logger;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.*;
 import java.net.URL;
@@ -25,6 +28,7 @@ import java.util.Map;
 public class DataBarrelBootstrap implements PluginBootstrap {
 
     private static final HikariDataSourceFactory HIKARI_DATA_SOURCE_FACTORY = new HikariDataSourceFactory();
+    private static final S3ClientFactory S3_CLIENT_FACTORY = new S3ClientFactory();
     static DataBarrelServiceImpl bedrockDataService;
     private Logger logger;
 
@@ -37,7 +41,24 @@ public class DataBarrelBootstrap implements PluginBootstrap {
     public void bootstrap(@NotNull BootstrapContext bootstrapContext) {
         this.logger = bootstrapContext.getLogger();
         var configPath = bootstrapContext.getDataDirectory().resolve("config.yml");
-        var databaseConfigReader = createConfigReader(configPath);
+        var pluginConfig = loadConfig(configPath);
+        var hikariDataSources = getDataSources(pluginConfig);
+        var s3Clients = getS3Clients(pluginConfig);
+        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources, s3Clients);
+        registerShutdownHook();
+    }
+
+    private void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (bedrockDataService.isOpen()) {
+                bedrockDataService.close();
+                logger.warn("Disable DataBarrelService form shutdownHook");
+            }
+        }));
+    }
+
+    private Map<String, HikariDataSource> getDataSources(Configuration pluginConfig) {
+        var databaseConfigReader = createDatabasesConfigReader(pluginConfig);
         var databaseConfigurations = databaseConfigReader.loadConfigurations();
         Map<String, HikariDataSource> hikariDataSources = new HashMap<>();
         for (var config : databaseConfigurations) {
@@ -51,31 +72,45 @@ public class DataBarrelBootstrap implements PluginBootstrap {
             logger.info("Load {} DataSource", config.name());
             hikariDataSources.put(config.name(), dataSource);
         }
-        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources);
-        registerShutdownHook();
+        return hikariDataSources;
     }
 
-    private void registerShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            if (bedrockDataService.isOpen()) {
-                bedrockDataService.close();
-                logger.warn("Disable DataBarrelService form shutdownHook");
+    private Map<String, S3Client> getS3Clients(Configuration pluginConfig) {
+        var s3ConfigReader = createS3ConfigReader(pluginConfig);
+        var s3Configurations = s3ConfigReader.loadConfigurations();
+        Map<String, S3Client> s3Clients = new HashMap<>();
+        for (var config : s3Configurations) {
+            S3Client s3Client;
+            try {
+                s3Client = S3_CLIENT_FACTORY.S3ConfigFactory(config);
+
+            } catch (Throwable t) {
+                s3Clients.values().forEach(S3Client::close);
+                throw new BootstrapException("Fail to load s3 config", t);
             }
-        }));
+            logger.info("Load {} S3Client", config.name());
+            s3Clients.put(config.name(), s3Client);
+        }
+        return s3Clients;
     }
 
-    private DatabaseConfigReader createConfigReader(Path configPath) {
+    private DatabaseConfigReader createDatabasesConfigReader(Configuration config) {
+        return new DatabaseConfigReader(logger, config.getConfigurationSection("databases"));
+    }
+
+    private S3ConfigReader createS3ConfigReader(Configuration config) {
+        return new S3ConfigReader(logger, config.getConfigurationSection("s3"));
+    }
+
+    private Configuration loadConfig(Path configPath) {
         if (!Files.exists(configPath)) {
             copyDefaultConfig(configPath);
         }
-        YamlConfiguration configuration;
         try (Reader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(configPath)))) {
-            configuration = YamlConfiguration.loadConfiguration(reader);
+            return YamlConfiguration.loadConfiguration(reader);
         } catch (IOException e) {
             throw new BootstrapException("Can't read config file", e);
         }
-        ConfigurationSection section = configuration.getConfigurationSection("databases");
-        return new DatabaseConfigReader(logger, section);
     }
 
     private void copyDefaultConfig(Path path) {
