@@ -40,8 +40,10 @@ dependencies {
     implementation("software.amazon.awssdk:auth:2.31.78")
     implementation("software.amazon.awssdk:regions:2.31.78")
     implementation("software.amazon.awssdk:url-connection-client:2.31.78")
+    implementation("redis.clients:jedis:2.8.0")
     implementation("org.apache.curator:curator-framework:5.8.0")
     implementation("org.apache.curator:curator-recipes:5.8.0")
+
     compileOnly("dev.folia:folia-api:1.20.1-R0.1-SNAPSHOT")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
