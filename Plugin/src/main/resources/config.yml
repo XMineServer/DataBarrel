@@ -13,3 +13,15 @@ s3:
     accessKeyId: "minioadmin"
     secretAccessKey: "minioadmin"
     pathStyleAccess: true
+redis:
+  default:
+    cluster: false
+    host: localhost
+    port: 6379
+#    user: user
+#    password: password
+    nodes:
+      - host: localhost
+        port: 6379
+      - host: localhost
+        port: 6380
