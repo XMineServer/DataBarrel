@@ -14,7 +14,7 @@ paper {
     main = "org.skyisland.databarrel.DataBarrelPlugin"
     bootstrapper = "org.skyisland.databarrel.DataBarrelBootstrap"
     apiVersion = "1.21"
-    authors = listOf("sidey383")
+    authors = listOf("sidey383", "vasiniyo")
     foliaSupported = true
 }
 
@@ -28,12 +28,17 @@ java {
 
 dependencies {
     api("com.zaxxer:HikariCP:6.3.0")
+    api("software.amazon.awssdk:s3:2.31.78")
 
     implementation("mysql:mysql-connector-java:8.0.33")
     implementation("org.postgresql:postgresql:42.6.0")
     implementation("com.h2database:h2:2.2.224")
     implementation("com.zaxxer:HikariCP:6.3.0")
-
+    implementation("software.amazon.awssdk:s3:2.31.78")
+    implementation("software.amazon.awssdk:core:2.31.78")
+    implementation("software.amazon.awssdk:auth:2.31.78")
+    implementation("software.amazon.awssdk:regions:2.31.78")
+    implementation("software.amazon.awssdk:url-connection-client:2.31.78")
     compileOnly("dev.folia:folia-api:1.20.1-R0.1-SNAPSHOT")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
