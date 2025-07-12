@@ -7,6 +7,7 @@ import org.skyisland.databarrel.DataBarrelTest;
 public class SampleDataBarrelPlugin extends JavaPlugin {
 
     private static final String DATASOURCE_NAME = "mysql_database";
+    private static final String S3_CLIENT_NAME = "default";
 
     @Override
     public void onEnable() {
@@ -15,6 +16,7 @@ public class SampleDataBarrelPlugin extends JavaPlugin {
             getSLF4JLogger().error("Can't found BedrockDataService");
             return;
         }
-        DataBarrelTest.testConnection(getSLF4JLogger(), DATASOURCE_NAME, service);
+        DataBarrelTest.testSqlConnection(getSLF4JLogger(), DATASOURCE_NAME, service);
+        DataBarrelTest.testS3Connection(getSLF4JLogger(), S3_CLIENT_NAME, service);
     }
 }

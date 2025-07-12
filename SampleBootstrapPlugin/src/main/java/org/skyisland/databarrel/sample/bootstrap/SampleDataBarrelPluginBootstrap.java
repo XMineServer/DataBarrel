@@ -10,9 +10,11 @@ import org.skyisland.databarrel.DataBarrelTest;
 public class SampleDataBarrelPluginBootstrap implements PluginBootstrap {
 
     private static final String DATASOURCE_NAME = "mysql_database";
+    private static final String S3_CLIENT_NAME = "default";
 
     @Override
     public void bootstrap(@NotNull BootstrapContext context) {
-        DataBarrelTest.testConnection(context.getLogger(), DATASOURCE_NAME, DataBarrelService.getInstance());
+        DataBarrelTest.testSqlConnection(context.getLogger(), DATASOURCE_NAME, DataBarrelService.getInstance());
+        DataBarrelTest.testS3Connection(context.getLogger(), S3_CLIENT_NAME, DataBarrelService.getInstance());
     }
 }
