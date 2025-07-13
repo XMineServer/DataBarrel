@@ -4,14 +4,17 @@ import com.zaxxer.hikari.HikariDataSource;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
+import org.apache.curator.framework.CuratorFramework;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.skyisland.databarrel.config.DatabaseConfigReader;
 import org.skyisland.databarrel.config.S3ConfigReader;
+import org.skyisland.databarrel.config.ZooKeeperConfigReader;
 import org.skyisland.databarrel.datasource.HikariDataSourceFactory;
 import org.skyisland.databarrel.datasource.S3ClientFactory;
+import org.skyisland.databarrel.datasource.ZooKeeperFactory;
 import org.skyisland.databarrel.exception.BootstrapException;
 import org.slf4j.Logger;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -29,6 +32,7 @@ public class DataBarrelBootstrap implements PluginBootstrap {
 
     private static final HikariDataSourceFactory HIKARI_DATA_SOURCE_FACTORY = new HikariDataSourceFactory();
     private static final S3ClientFactory S3_CLIENT_FACTORY = new S3ClientFactory();
+    private static final ZooKeeperFactory ZOOKEEPER_FACTORY = new ZooKeeperFactory();
     static DataBarrelServiceImpl bedrockDataService;
     private Logger logger;
 
@@ -44,7 +48,8 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         var pluginConfig = loadConfig(configPath);
         var hikariDataSources = getDataSources(pluginConfig);
         var s3Clients = getS3Clients(pluginConfig);
-        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources, s3Clients);
+        var zooKeeperClients = getZooKeepers(pluginConfig);
+        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources, s3Clients, zooKeeperClients);
         registerShutdownHook();
     }
 
@@ -94,12 +99,34 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         return s3Clients;
     }
 
+    private Map<String, CuratorFramework> getZooKeepers(Configuration pluginConfig) {
+        var zooKeeperConfigReader = createZooKeeperConfigReader(pluginConfig);
+        var zooKeeperConfigurations = zooKeeperConfigReader.loadConfigurations();
+        Map<String, CuratorFramework> zooKeeperClients = new HashMap<>();
+        for (var config : zooKeeperConfigurations) {
+            CuratorFramework zooKeeperClient;
+            try {
+                zooKeeperClient = ZOOKEEPER_FACTORY.zooKeeperConfigFactory(config);
+            } catch (Throwable t) {
+                zooKeeperClients.values().forEach(CuratorFramework::close);
+                throw new BootstrapException("Fail to load ZooKeeper config", t);
+            }
+            logger.info("Load {} ZooKeeper", config.name());
+            zooKeeperClients.put(config.name(), zooKeeperClient);
+        }
+        return zooKeeperClients;
+    }
+
     private DatabaseConfigReader createDatabasesConfigReader(Configuration config) {
         return new DatabaseConfigReader(logger, config.getConfigurationSection("databases"));
     }
 
     private S3ConfigReader createS3ConfigReader(Configuration config) {
         return new S3ConfigReader(logger, config.getConfigurationSection("s3"));
+    }
+
+    private ZooKeeperConfigReader createZooKeeperConfigReader(Configuration config) {
+        return new ZooKeeperConfigReader(logger, config.getConfigurationSection("zookeeper"));
     }
 
     private Configuration loadConfig(Path configPath) {

@@ -13,3 +13,12 @@ s3:
     accessKeyId: "minioadmin"
     secretAccessKey: "minioadmin"
     pathStyleAccess: true
+zookeeper:
+  default:
+    quorum:
+      - "localhost:2181"
+    sessionTimeout: 3000
+    namespace: "data-barrel"
+    retry:
+      maxRetries: 5
+      intervalMs: 1000
