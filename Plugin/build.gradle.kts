@@ -29,7 +29,7 @@ java {
 dependencies {
     api("com.zaxxer:HikariCP:6.3.0")
     api("software.amazon.awssdk:s3:2.31.78")
-    api("redis.clients:jedis:2.8.0")
+    api("redis.clients:jedis:6.0.0")
     api("org.apache.curator:curator-framework:5.8.0")
 
     implementation("mysql:mysql-connector-java:8.0.33")

@@ -14,12 +14,12 @@ import org.skyisland.databarrel.config.RedisConfigReader;
 import org.skyisland.databarrel.config.S3ConfigReader;
 import org.skyisland.databarrel.config.ZooKeeperConfigReader;
 import org.skyisland.databarrel.datasource.HikariDataSourceFactory;
-import org.skyisland.databarrel.datasource.JedisCommandsProvider;
 import org.skyisland.databarrel.datasource.JedisProviderFactory;
 import org.skyisland.databarrel.datasource.S3ClientFactory;
 import org.skyisland.databarrel.datasource.ZooKeeperFactory;
 import org.skyisland.databarrel.exception.BootstrapException;
 import org.slf4j.Logger;
+import redis.clients.jedis.UnifiedJedis;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.*;
@@ -104,17 +104,17 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         return s3Clients;
     }
 
-    private Map<String, JedisCommandsProvider<?>> getJedisClients(Configuration pluginConfig) {
+    private Map<String, UnifiedJedis> getJedisClients(Configuration pluginConfig) {
         var redisConfigReader = createRedisConfigReader(pluginConfig);
         var redisConfigurations = redisConfigReader.loadConfigurations();
-        Map<String, JedisCommandsProvider<?>> jedisProviders = new HashMap<>();
+        Map<String, UnifiedJedis> jedisProviders = new HashMap<>();
         for (var config : redisConfigurations) {
-            JedisCommandsProvider<?> jedisProvider;
+            UnifiedJedis jedisProvider;
             try {
                 jedisProvider = JEDIS_PROVIDER_FACTORY.create(config);
             } catch (Throwable t) {
-                jedisProviders.values().forEach(JedisCommandsProvider::close);
-                throw new BootstrapException("Fail to load s3 config", t);
+                jedisProviders.values().forEach(UnifiedJedis::close);
+                throw new BootstrapException("Fail to load jedis config", t);
             }
             logger.info("Load {} JedisProvider", config.name());
             jedisProviders.put(config.name(), jedisProvider);
