@@ -1,5 +1,7 @@
 package org.skyisland.databarrel;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.slf4j.Logger;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -10,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public final class DataBarrelTest {
 
@@ -98,6 +101,50 @@ public final class DataBarrelTest {
         } catch (RuntimeException e) {
             logger.info("Failed to delete test bucket: {}", bucketName);
             throw e;
+        }
+    }
+
+    public static void testZooKeeperConnection(Logger logger, String zooKeeperName, DataBarrelService service) {
+        CuratorFramework client = service.getZooKeeperClient(zooKeeperName);
+        if (client == null) {
+            logger.error("Can't find ZooKeeper configuration: {}", zooKeeperName);
+            return;
+        }
+        String path = "/" + UUID.randomUUID();
+        String connectionString = client.getZookeeperClient().getCurrentConnectionString();
+        byte[] content = "zookeeper message".getBytes();
+        try {
+            if (client.getState() == CuratorFrameworkState.LATENT) {
+                client.start();
+                client.blockUntilConnected(1, TimeUnit.SECONDS);
+                logger.info("ZooKeeper connected to: {}", connectionString);
+            } else {
+                logger.info("ZooKeeper already connected to: {}", connectionString);
+            }
+        } catch (Exception e) {
+            logger.info("Failed to start ZooKeeper connection: {}", connectionString);
+            throw new RuntimeException(e);
+        }
+        try {
+            client.create().forPath(path, content);
+            logger.info("Test znode created: {}; with content: \"{}\"", path, new String(content));
+        } catch (Exception e) {
+            logger.info("Failed to create ZooKeeper node: {}", path);
+            throw new RuntimeException(e);
+        }
+        try {
+            byte[] data = client.getData().forPath(path);
+            logger.info("Read data from {}: {}", path, new String(data));
+        } catch (Exception e) {
+            logger.info("Failed to read data from {}", path);
+            throw new RuntimeException(e);
+        }
+        try {
+            client.delete().forPath(path);
+            logger.info("Test znode deleted: {}", path);
+        } catch (Exception e) {
+            logger.info("Failed to delete test znode: {}", path);
+            throw new RuntimeException(e);
         }
     }
 }
