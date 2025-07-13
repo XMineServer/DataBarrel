@@ -2,15 +2,18 @@ package org.skyisland.databarrel;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
+import org.skyisland.databarrel.datasource.JedisCommandsProvider;
 import org.slf4j.Logger;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -147,4 +150,27 @@ public final class DataBarrelTest {
             throw new RuntimeException(e);
         }
     }
+
+    public static void testJedisConnection(Logger logger, String jedisProviderName,  DataBarrelService service) {
+        JedisCommandsProvider<?> jedisProvider = service.getJedisProvider(jedisProviderName);
+        if (jedisProvider == null) {
+            logger.error("Can't found jedis provider {}", jedisProviderName);
+            return;
+        }
+        String testKey = "test";
+        String testValue = "Test value";
+        try (var commands = jedisProvider.get()) {
+            commands.set(testKey, testValue);
+            String storedValue = commands.get(testKey);
+            assert Objects.equals(storedValue, testValue);
+            commands.del(testValue);
+            storedValue = commands.get(testKey);
+            assert storedValue == null;
+        } catch (IOException e) {
+            logger.error("Fail to execute test jedis commands", e);
+            throw new RuntimeException(e);
+        }
+
+    }
+
 }

@@ -5,7 +5,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
-public class JedisSourceFactory {
+public class JedisProviderFactory {
 
     /**
      * Не возвращает {@link Jedis} или {@link JedisCluster}, чтобы

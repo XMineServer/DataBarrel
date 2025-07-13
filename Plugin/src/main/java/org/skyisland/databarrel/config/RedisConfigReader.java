@@ -32,6 +32,7 @@ public class RedisConfigReader {
 
     private RedisConfiguration readRedisSection(ConfigurationSection section) {
         return RedisConfiguration.builder()
+                .name(section.getName())
                 .isCluster(section.getBoolean("cluster", false))
                 .host(section.getString("host", "localhost"))
                 .port(section.getInt("port", 6379))

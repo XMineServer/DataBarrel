@@ -6,6 +6,7 @@ import java.util.List;
 
 @Builder
 public record RedisConfiguration(
+        String name,
         boolean isCluster,
         String host,
         int port,
