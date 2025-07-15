@@ -10,13 +10,16 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.skyisland.databarrel.config.DatabaseConfigReader;
+import org.skyisland.databarrel.config.RedisConfigReader;
 import org.skyisland.databarrel.config.S3ConfigReader;
 import org.skyisland.databarrel.config.ZooKeeperConfigReader;
 import org.skyisland.databarrel.datasource.HikariDataSourceFactory;
+import org.skyisland.databarrel.datasource.JedisProviderFactory;
 import org.skyisland.databarrel.datasource.S3ClientFactory;
 import org.skyisland.databarrel.datasource.ZooKeeperFactory;
 import org.skyisland.databarrel.exception.BootstrapException;
 import org.slf4j.Logger;
+import redis.clients.jedis.UnifiedJedis;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.*;
@@ -33,6 +36,7 @@ public class DataBarrelBootstrap implements PluginBootstrap {
     private static final HikariDataSourceFactory HIKARI_DATA_SOURCE_FACTORY = new HikariDataSourceFactory();
     private static final S3ClientFactory S3_CLIENT_FACTORY = new S3ClientFactory();
     private static final ZooKeeperFactory ZOOKEEPER_FACTORY = new ZooKeeperFactory();
+    private static final JedisProviderFactory JEDIS_PROVIDER_FACTORY = new JedisProviderFactory();
     static DataBarrelServiceImpl bedrockDataService;
     private Logger logger;
 
@@ -49,7 +53,8 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         var hikariDataSources = getDataSources(pluginConfig);
         var s3Clients = getS3Clients(pluginConfig);
         var zooKeeperClients = getZooKeepers(pluginConfig);
-        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources, s3Clients, zooKeeperClients);
+        var jedisProviders = getJedisClients(pluginConfig);
+        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources, s3Clients, zooKeeperClients, jedisProviders);
         registerShutdownHook();
     }
 
@@ -99,6 +104,24 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         return s3Clients;
     }
 
+    private Map<String, UnifiedJedis> getJedisClients(Configuration pluginConfig) {
+        var redisConfigReader = createRedisConfigReader(pluginConfig);
+        var redisConfigurations = redisConfigReader.loadConfigurations();
+        Map<String, UnifiedJedis> jedisProviders = new HashMap<>();
+        for (var config : redisConfigurations) {
+            UnifiedJedis jedisProvider;
+            try {
+                jedisProvider = JEDIS_PROVIDER_FACTORY.create(config);
+            } catch (Throwable t) {
+                jedisProviders.values().forEach(UnifiedJedis::close);
+                throw new BootstrapException("Fail to load jedis config", t);
+            }
+            logger.info("Load {} JedisProvider", config.name());
+            jedisProviders.put(config.name(), jedisProvider);
+        }
+        return jedisProviders;
+    }
+
     private Map<String, CuratorFramework> getZooKeepers(Configuration pluginConfig) {
         var zooKeeperConfigReader = createZooKeeperConfigReader(pluginConfig);
         var zooKeeperConfigurations = zooKeeperConfigReader.loadConfigurations();
@@ -123,6 +146,10 @@ public class DataBarrelBootstrap implements PluginBootstrap {
 
     private S3ConfigReader createS3ConfigReader(Configuration config) {
         return new S3ConfigReader(logger, config.getConfigurationSection("s3"));
+    }
+
+    private RedisConfigReader createRedisConfigReader(Configuration config) {
+        return new RedisConfigReader(logger, config.getConfigurationSection("redis"));
     }
 
     private ZooKeeperConfigReader createZooKeeperConfigReader(Configuration config) {
