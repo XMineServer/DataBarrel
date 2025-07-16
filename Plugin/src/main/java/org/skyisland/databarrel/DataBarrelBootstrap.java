@@ -54,7 +54,7 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         var s3Clients = getS3Clients(pluginConfig);
         var zooKeeperClients = getZooKeepers(pluginConfig);
         var jedisProviders = getJedisClients(pluginConfig);
-        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources, s3Clients, zooKeeperClients, jedisProviders);
+        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources, s3Clients, jedisProviders, zooKeeperClients);
         registerShutdownHook();
     }
 

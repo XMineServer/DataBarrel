@@ -3,10 +3,11 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("net.minecrell.plugin-yml.paper") version "0.6.0"
     id("org.jetbrains.kotlin.plugin.lombok") version "2.2.0-RC"
+    id("maven-publish")
 }
 
 group = "org.skyisland"
-version = "0.1"
+version = "1.0.0"
 
 paper {
     name = rootProject.name
@@ -72,5 +73,27 @@ tasks {
     jar {
         archiveFileName.set("${rootProject.name}-${project.version}.jar")
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("gpr") {
+            from(components["java"])
+            groupId = group.toString()
+            artifactId = rootProject.name
+            version = version.toString()
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/xmineserver/databarrel")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }

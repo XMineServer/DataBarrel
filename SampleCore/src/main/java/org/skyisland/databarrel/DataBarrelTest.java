@@ -1,6 +1,7 @@
 package org.skyisland.databarrel;
 
-import org.skyisland.databarrel.datasource.JedisCommandsProvider;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.imps.CuratorFrameworkState;
 import org.slf4j.Logger;
 import redis.clients.jedis.UnifiedJedis;
 import software.amazon.awssdk.core.sync.RequestBody;
