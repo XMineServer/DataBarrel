@@ -11,10 +11,40 @@
 # Статус
 
 Плагин находится в разработке, сейчас реализованы только подключения к mysql базе данных.
+## Поддерживаемые подключения:
+### SQL-СУБД (mysql, postgres, h2)
+Используется пул соединений HikariCP (по умолчанию – MySQL).<br>
+Работа с подключениями происходит через HikariDataSource
+### Redis
+Используется библиотека Jedis. Возможно использование отдельного подключения и кластера.<br>
+Работа с подключениями происходит через UnifiedJedis
+### ZooKeeper
+Используется библиотека Apache Curator.<br>
+Работа с подключениями происходит через CuratorFramework
+### S3
+Используется библиотека AWS SDK.<br>
+Работа с подключениями происходит через S3Client
 
-## Планируется
-Подключение к Redis
+# Подключение библиотеки
+## gradle
+`build.gradle.kts`
+```
+repositories {
+    maven {
+        url = uri("https://maven.pkg.github.com/xmineserver/databarrel")
+    }
+}
+dependencies {
+    implementation("org.skyisland:databarrel:1.0.0")
+}
+```
 
-Подключени к ZooKeeper
+# Для разработчиков
+Для создания новой версии библиотеки нужно поменять версию
+в `./Plugin/build.gradle.kts` и создать новый тег:
+```
+git tag v1.0.1
+git push origin v1.0.1
+```
 
-Подключение к S3
+ 
