@@ -27,11 +27,25 @@
 
 # Подключение библиотеки
 ## gradle
+
+укажите ваш username и токен, который должен обладать правом read:packages <br>
+создать токен можно здесь https://github.com/settings/tokens/new <br>
+
+`gradle.properties`
+```
+gpr.user=username
+gpr.token=ghp_token
+```
+
 `build.gradle.kts`
 ```
 repositories {
     maven {
         url = uri("https://maven.pkg.github.com/xmineserver/databarrel")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("gpr.token") as String? ?: System.getenv("GITHUB_TOKEN")
+        }
     }
 }
 dependencies {
