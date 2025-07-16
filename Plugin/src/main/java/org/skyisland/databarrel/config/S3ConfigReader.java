@@ -18,6 +18,7 @@ public class S3ConfigReader {
     }
 
     public List<S3Configuration> loadConfigurations() {
+        if (section == null) return List.of();
         List<S3Configuration> resultList = new ArrayList<>();
         for (String databaseKey : section.getKeys(false)) {
             ConfigurationSection subSection = section.getConfigurationSection(databaseKey);

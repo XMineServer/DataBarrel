@@ -18,6 +18,7 @@ public class ZooKeeperConfigReader {
     }
 
     public List<ZooKeeperConfiguration> loadConfigurations() {
+        if (section == null) return List.of();
         List<ZooKeeperConfiguration> resultList = new ArrayList<>();
         for (String zooKeeperClientKey : section.getKeys(false)) {
             ConfigurationSection subSection = section.getConfigurationSection(zooKeeperClientKey);

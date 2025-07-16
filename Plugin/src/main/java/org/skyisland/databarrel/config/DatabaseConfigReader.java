@@ -18,6 +18,7 @@ public class DatabaseConfigReader {
     }
 
     public List<DatabaseConfiguration> loadConfigurations() {
+        if (section == null) return List.of();
         List<DatabaseConfiguration> resultList = new ArrayList<>();
         for (String databaseKey : section.getKeys(false)) {
             ConfigurationSection subSection = section.getConfigurationSection(databaseKey);

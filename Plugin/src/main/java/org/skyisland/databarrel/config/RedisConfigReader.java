@@ -18,6 +18,7 @@ public class RedisConfigReader {
         this.section = section;
     }
     public List<RedisConfiguration> loadConfigurations() {
+        if (section == null) return List.of();
         List<RedisConfiguration> resultList = new ArrayList<>();
         for (String redisKey : section.getKeys(false)) {
             ConfigurationSection subSection = section.getConfigurationSection(redisKey);
