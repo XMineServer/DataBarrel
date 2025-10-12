@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "org.skyisland"
-version = "1.0.0"
+version = "1.0.1"
 
 paper {
     name = rootProject.name
@@ -28,30 +28,31 @@ java {
 }
 
 dependencies {
-    api("com.zaxxer:HikariCP:6.3.0")
-    api("software.amazon.awssdk:s3:2.31.78")
-    api("redis.clients:jedis:6.0.0")
-    api("org.apache.curator:curator-framework:5.8.0")
+    api(libs.hikarycp)
+    api(libs.awssdk.s3)
+    api(libs.jedis)
+    api(libs.curator.framework)
+    api(libs.curator.recipes)
 
     implementation("mysql:mysql-connector-java:8.0.33")
     implementation("org.postgresql:postgresql:42.6.0")
     implementation("com.h2database:h2:2.2.224")
-    implementation("com.zaxxer:HikariCP:6.3.0")
-    implementation("software.amazon.awssdk:s3:2.31.78")
-    implementation("software.amazon.awssdk:core:2.31.78")
-    implementation("software.amazon.awssdk:auth:2.31.78")
-    implementation("software.amazon.awssdk:regions:2.31.78")
-    implementation("software.amazon.awssdk:url-connection-client:2.31.78")
-    implementation("org.apache.curator:curator-framework:5.8.0")
-    implementation("org.apache.curator:curator-recipes:5.8.0")
+    implementation(libs.hikarycp)
+    implementation(libs.awssdk.s3)
+    implementation(libs.awssdk.core)
+    implementation(libs.awssdk.auth)
+    implementation(libs.awssdk.regions)
+    implementation(libs.awssdk.url)
+    implementation(libs.curator.framework)
+    implementation(libs.curator.recipes)
 
-    compileOnly("dev.folia:folia-api:1.20.1-R0.1-SNAPSHOT")
+    compileOnly(libs.minecraft.api)
 
-    compileOnly("org.projectlombok:lombok:1.18.30")
-    annotationProcessor("org.projectlombok:lombok:1.18.30")
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
 
-    testCompileOnly("org.projectlombok:lombok:1.18.30")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.30")
+    testCompileOnly(libs.lombok)
+    testAnnotationProcessor(libs.lombok)
 }
 
 tasks {
