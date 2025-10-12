@@ -134,6 +134,12 @@ public class DataBarrelBootstrap implements PluginBootstrap {
                 zooKeeperClients.values().forEach(CuratorFramework::close);
                 throw new BootstrapException("Fail to load ZooKeeper config", t);
             }
+            try {
+                zooKeeperClient.start();
+            } catch (Throwable t) {
+                zooKeeperClients.values().forEach(CuratorFramework::close);
+                throw new BootstrapException("Fail to start ZooKeeper config", t);
+            }
             logger.info("Load {} ZooKeeper", config.name());
             zooKeeperClients.put(config.name(), zooKeeperClient);
         }

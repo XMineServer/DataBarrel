@@ -1,3 +1,5 @@
+import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
+
 plugins {
     id("java-library")
     id("com.github.johnrengelman.shadow") version "8.1.1"
@@ -17,6 +19,7 @@ paper {
     apiVersion = "1.21"
     authors = listOf("sidey383", "vasiniyo")
     foliaSupported = true
+    load = BukkitPluginDescription.PluginLoadOrder.STARTUP
 }
 
 java {
