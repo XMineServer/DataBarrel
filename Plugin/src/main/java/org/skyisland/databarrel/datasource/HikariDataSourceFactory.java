@@ -4,8 +4,9 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.skyisland.databarrel.config.DatabaseConfiguration;
 
-public class HikariDataSourceFactory {
+public class HikariDataSourceFactory implements ProviderFactory<DatabaseConfiguration, HikariDataSource> {
 
+    @Override
     public HikariDataSource create(DatabaseConfiguration configuration) {
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(configuration.getJdbcUrl());

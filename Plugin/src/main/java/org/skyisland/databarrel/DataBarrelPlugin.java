@@ -20,13 +20,4 @@ public class DataBarrelPlugin extends JavaPlugin {
                 ServicePriority.Highest);
     }
 
-    @Override
-    public void onDisable() {
-        getServer().getServicesManager().unregister(bedrockDataService);
-        if (bedrockDataService.isOpen()) {
-            bedrockDataService.close();
-            getSLF4JLogger().info("Disable DataBarrelService");
-        }
-    }
-
 }

@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.skyisland"
-version = "1.0.1"
+version = "1.0.1-alternative"
 
 paper {
     name = rootProject.name

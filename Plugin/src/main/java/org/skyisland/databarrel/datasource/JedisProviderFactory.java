@@ -3,13 +3,14 @@ package org.skyisland.databarrel.datasource;
 import org.skyisland.databarrel.config.RedisConfiguration;
 import redis.clients.jedis.*;
 
-public class JedisProviderFactory {
+public class JedisProviderFactory implements ProviderFactory<RedisConfiguration, UnifiedJedis> {
 
     /**
      * Не возвращает {@link JedisPooled} или {@link JedisCluster}, чтобы
      * создать унифицированный интерфейс, который позволяет работать
      * как с кластером узлов, так и с standalone узлом.
      * **/
+    @Override
     public UnifiedJedis create(RedisConfiguration configuration) {
         if (configuration.isCluster()) {
             throw new UnsupportedOperationException("Redis cluster not supported");

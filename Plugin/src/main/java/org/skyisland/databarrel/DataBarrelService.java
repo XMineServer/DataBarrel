@@ -7,10 +7,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 public interface DataBarrelService {
 
-    HikariDataSource getHikariDataSource(String name);
-    S3Client getS3Client(String name);
-    CuratorFramework getZooKeeperClient(String name);
-    UnifiedJedis getJedisProvider(String name);
+    HikariDataSource getHikariDataSource(String name, boolean autoShutdown) throws Exception;
+    S3Client getS3Client(String name, boolean autoShutdown) throws Exception;
+    CuratorFramework getZooKeeperClient(String name, boolean autoShutdown) throws Exception;
+    UnifiedJedis getJedisProvider(String name, boolean autoShutdown) throws Exception;
 
     static DataBarrelService getInstance() {
         return DataBarrelBootstrap.bedrockDataService;

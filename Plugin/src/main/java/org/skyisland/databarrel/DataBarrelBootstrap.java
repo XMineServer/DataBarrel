@@ -1,26 +1,15 @@
 package org.skyisland.databarrel;
 
-import com.zaxxer.hikari.HikariDataSource;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.bootstrap.PluginProviderContext;
-import org.apache.curator.framework.CuratorFramework;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-import org.skyisland.databarrel.config.DatabaseConfigReader;
-import org.skyisland.databarrel.config.RedisConfigReader;
-import org.skyisland.databarrel.config.S3ConfigReader;
-import org.skyisland.databarrel.config.ZooKeeperConfigReader;
-import org.skyisland.databarrel.datasource.HikariDataSourceFactory;
-import org.skyisland.databarrel.datasource.JedisProviderFactory;
-import org.skyisland.databarrel.datasource.S3ClientFactory;
-import org.skyisland.databarrel.datasource.ZooKeeperFactory;
+import org.skyisland.databarrel.config.*;
 import org.skyisland.databarrel.exception.BootstrapException;
 import org.slf4j.Logger;
-import redis.clients.jedis.UnifiedJedis;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.*;
 import java.net.URL;
@@ -33,10 +22,6 @@ import java.util.Map;
 @SuppressWarnings("UnstableApiUsage")
 public class DataBarrelBootstrap implements PluginBootstrap {
 
-    private static final HikariDataSourceFactory HIKARI_DATA_SOURCE_FACTORY = new HikariDataSourceFactory();
-    private static final S3ClientFactory S3_CLIENT_FACTORY = new S3ClientFactory();
-    private static final ZooKeeperFactory ZOOKEEPER_FACTORY = new ZooKeeperFactory();
-    private static final JedisProviderFactory JEDIS_PROVIDER_FACTORY = new JedisProviderFactory();
     static DataBarrelServiceImpl bedrockDataService;
     private Logger logger;
 
@@ -62,86 +47,51 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             if (bedrockDataService.isOpen()) {
                 bedrockDataService.close();
-                logger.warn("Disable DataBarrelService form shutdownHook");
+                logger.warn("Disable DataBarrelService data services");
             }
         }));
     }
 
-    private Map<String, HikariDataSource> getDataSources(Configuration pluginConfig) {
+    private Map<String, DatabaseConfiguration> getDataSources(Configuration pluginConfig) {
         var databaseConfigReader = createDatabasesConfigReader(pluginConfig);
         var databaseConfigurations = databaseConfigReader.loadConfigurations();
-        Map<String, HikariDataSource> hikariDataSources = new HashMap<>();
+        Map<String, DatabaseConfiguration> hikariDataSources = new HashMap<>();
         for (var config : databaseConfigurations) {
-            HikariDataSource dataSource;
-            try {
-                dataSource = HIKARI_DATA_SOURCE_FACTORY.create(config);
-            } catch (Throwable t) {
-                hikariDataSources.values().forEach(HikariDataSource::close);
-                throw new BootstrapException("Fail to load hikari datasource", t);
-            }
-            logger.info("Load {} DataSource", config.name());
-            hikariDataSources.put(config.name(), dataSource);
+            logger.info("Load {} DataSource configuration", config.name());
+            hikariDataSources.put(config.name(), config);
         }
         return hikariDataSources;
     }
 
-    private Map<String, S3Client> getS3Clients(Configuration pluginConfig) {
+    private Map<String, S3Configuration> getS3Clients(Configuration pluginConfig) {
         var s3ConfigReader = createS3ConfigReader(pluginConfig);
         var s3Configurations = s3ConfigReader.loadConfigurations();
-        Map<String, S3Client> s3Clients = new HashMap<>();
+        Map<String, S3Configuration> s3Clients = new HashMap<>();
         for (var config : s3Configurations) {
-            S3Client s3Client;
-            try {
-                s3Client = S3_CLIENT_FACTORY.S3ConfigFactory(config);
-
-            } catch (Throwable t) {
-                s3Clients.values().forEach(S3Client::close);
-                throw new BootstrapException("Fail to load s3 config", t);
-            }
-            logger.info("Load {} S3Client", config.name());
-            s3Clients.put(config.name(), s3Client);
+            logger.info("Load {} S3 configuration", config.name());
+            s3Clients.put(config.name(), config);
         }
         return s3Clients;
     }
 
-    private Map<String, UnifiedJedis> getJedisClients(Configuration pluginConfig) {
+    private Map<String, RedisConfiguration> getJedisClients(Configuration pluginConfig) {
         var redisConfigReader = createRedisConfigReader(pluginConfig);
         var redisConfigurations = redisConfigReader.loadConfigurations();
-        Map<String, UnifiedJedis> jedisProviders = new HashMap<>();
+        Map<String, RedisConfiguration> jedisProviders = new HashMap<>();
         for (var config : redisConfigurations) {
-            UnifiedJedis jedisProvider;
-            try {
-                jedisProvider = JEDIS_PROVIDER_FACTORY.create(config);
-            } catch (Throwable t) {
-                jedisProviders.values().forEach(UnifiedJedis::close);
-                throw new BootstrapException("Fail to load jedis config", t);
-            }
-            logger.info("Load {} JedisProvider", config.name());
-            jedisProviders.put(config.name(), jedisProvider);
+            logger.info("Load {} Redis configuration", config.name());
+            jedisProviders.put(config.name(), config);
         }
         return jedisProviders;
     }
 
-    private Map<String, CuratorFramework> getZooKeepers(Configuration pluginConfig) {
+    private Map<String, ZooKeeperConfiguration> getZooKeepers(Configuration pluginConfig) {
         var zooKeeperConfigReader = createZooKeeperConfigReader(pluginConfig);
         var zooKeeperConfigurations = zooKeeperConfigReader.loadConfigurations();
-        Map<String, CuratorFramework> zooKeeperClients = new HashMap<>();
+        Map<String, ZooKeeperConfiguration> zooKeeperClients = new HashMap<>();
         for (var config : zooKeeperConfigurations) {
-            CuratorFramework zooKeeperClient;
-            try {
-                zooKeeperClient = ZOOKEEPER_FACTORY.zooKeeperConfigFactory(config);
-            } catch (Throwable t) {
-                zooKeeperClients.values().forEach(CuratorFramework::close);
-                throw new BootstrapException("Fail to load ZooKeeper config", t);
-            }
-            try {
-                zooKeeperClient.start();
-            } catch (Throwable t) {
-                zooKeeperClients.values().forEach(CuratorFramework::close);
-                throw new BootstrapException("Fail to start ZooKeeper config", t);
-            }
-            logger.info("Load {} ZooKeeper", config.name());
-            zooKeeperClients.put(config.name(), zooKeeperClient);
+            logger.info("Load {} ZooKeeper configuration", config.name());
+            zooKeeperClients.put(config.name(), config);
         }
         return zooKeeperClients;
     }

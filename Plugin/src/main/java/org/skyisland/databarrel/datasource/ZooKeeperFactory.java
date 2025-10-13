@@ -5,9 +5,11 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryNTimes;
 import org.skyisland.databarrel.config.ZooKeeperConfiguration;
 
-public class ZooKeeperFactory {
-    public CuratorFramework zooKeeperConfigFactory(ZooKeeperConfiguration configuration) {
-        return CuratorFrameworkFactory.builder()
+public class ZooKeeperFactory implements ProviderFactory<ZooKeeperConfiguration, CuratorFramework> {
+
+    @Override
+    public CuratorFramework create(ZooKeeperConfiguration configuration) {
+        var curator = CuratorFrameworkFactory.builder()
                 .connectString(String.join(",", configuration.quorum()))
                 .sessionTimeoutMs(configuration.sessionTimeout())
                 .namespace(configuration.namespace())
@@ -15,5 +17,7 @@ public class ZooKeeperFactory {
                         configuration.retry().maxRetries(),
                         configuration.retry().intervalMs()))
                 .build();
+        curator.start();
+        return curator;
     }
 }

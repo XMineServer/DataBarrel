@@ -8,8 +8,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 import java.net.URI;
 
-public class S3ClientFactory {
-    public S3Client S3ConfigFactory(S3Configuration configuration) {
+public class S3ClientFactory implements ProviderFactory<S3Configuration, S3Client> {
+
+    @Override
+    public S3Client create(S3Configuration configuration) {
         return S3Client.builder()
                 .endpointOverride(URI.create(configuration.endpoint()))
                 .region(Region.of(configuration.region()))
