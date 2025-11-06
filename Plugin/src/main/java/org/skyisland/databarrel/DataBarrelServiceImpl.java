@@ -1,5 +1,6 @@
 package org.skyisland.databarrel;
 
+import com.mongodb.client.MongoClient;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.curator.framework.CuratorFramework;
 import org.jetbrains.annotations.NotNull;
@@ -16,18 +17,21 @@ final class DataBarrelServiceImpl implements Closeable, DataBarrelService {
     private final Map<String, S3Client> s3ClientMap;
     private final Map<String, CuratorFramework> zooKeeperClientMap;
     private final Map<String, UnifiedJedis> jedisClientMap;
+    private final Map<String, MongoClient> mongoClientMap;
     private boolean isOpen = true;
 
     public DataBarrelServiceImpl(
             @NotNull Map<String, HikariDataSource> hikariDataSourceMap,
             @NotNull Map<String, S3Client> s3ClientMap,
             @NotNull Map<String, UnifiedJedis> jedisClientMap,
-            @NotNull Map<String, CuratorFramework> zooKeeperClientMap
+            @NotNull Map<String, CuratorFramework> zooKeeperClientMap,
+            @NotNull Map<String, MongoClient> mongoClientMap
     ) {
         this.hikariDataSourceMap = hikariDataSourceMap;
         this.s3ClientMap = s3ClientMap;
         this.zooKeeperClientMap = zooKeeperClientMap;
         this.jedisClientMap = jedisClientMap;
+        this.mongoClientMap = mongoClientMap;
     }
 
 
@@ -51,6 +55,11 @@ final class DataBarrelServiceImpl implements Closeable, DataBarrelService {
 
     public UnifiedJedis getJedisProvider(String name) {
         return jedisClientMap.get(name);
+    }
+
+    @Override
+    public MongoClient getMongoClient(String name) {
+        return mongoClientMap.get(name);
     }
 
     @Override

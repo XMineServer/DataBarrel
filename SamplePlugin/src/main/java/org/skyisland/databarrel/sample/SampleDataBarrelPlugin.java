@@ -4,12 +4,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.skyisland.databarrel.DataBarrelService;
 import org.skyisland.databarrel.DataBarrelTest;
 
+@SuppressWarnings("unused")
 public class SampleDataBarrelPlugin extends JavaPlugin {
 
     private static final String DATASOURCE_NAME = "mysql_database";
     private static final String S3_CLIENT_NAME = "default";
     private static final String ZOOKEEPER_NAME = "default";
     private static final String JEDIS_PROVIDER_NAME = "default";
+    private static final String MONGODB_CLIENT_NAME = "default";
 
     @Override
     public void onEnable() {
@@ -22,5 +24,6 @@ public class SampleDataBarrelPlugin extends JavaPlugin {
         DataBarrelTest.testS3Connection(getSLF4JLogger(), S3_CLIENT_NAME, service);
         DataBarrelTest.testZooKeeperConnection(getSLF4JLogger(), ZOOKEEPER_NAME, service);
         DataBarrelTest.testJedisConnection(getSLF4JLogger(), JEDIS_PROVIDER_NAME, service);
+        DataBarrelTest.testMongoClient(getSLF4JLogger(), MONGODB_CLIENT_NAME, DataBarrelService.getInstance());
     }
 }

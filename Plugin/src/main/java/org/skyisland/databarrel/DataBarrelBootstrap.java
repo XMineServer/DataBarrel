@@ -1,5 +1,6 @@
 package org.skyisland.databarrel;
 
+import com.mongodb.client.MongoClient;
 import com.zaxxer.hikari.HikariDataSource;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
@@ -9,14 +10,8 @@ import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-import org.skyisland.databarrel.config.DatabaseConfigReader;
-import org.skyisland.databarrel.config.RedisConfigReader;
-import org.skyisland.databarrel.config.S3ConfigReader;
-import org.skyisland.databarrel.config.ZooKeeperConfigReader;
-import org.skyisland.databarrel.datasource.HikariDataSourceFactory;
-import org.skyisland.databarrel.datasource.JedisProviderFactory;
-import org.skyisland.databarrel.datasource.S3ClientFactory;
-import org.skyisland.databarrel.datasource.ZooKeeperFactory;
+import org.skyisland.databarrel.config.*;
+import org.skyisland.databarrel.datasource.*;
 import org.skyisland.databarrel.exception.BootstrapException;
 import org.slf4j.Logger;
 import redis.clients.jedis.UnifiedJedis;
@@ -37,6 +32,7 @@ public class DataBarrelBootstrap implements PluginBootstrap {
     private static final S3ClientFactory S3_CLIENT_FACTORY = new S3ClientFactory();
     private static final ZooKeeperFactory ZOOKEEPER_FACTORY = new ZooKeeperFactory();
     private static final JedisProviderFactory JEDIS_PROVIDER_FACTORY = new JedisProviderFactory();
+    private static final MongoClientFactory MONGO_CLIENT_FACTORY = new MongoClientFactory();
     static DataBarrelServiceImpl bedrockDataService;
     private Logger logger;
 
@@ -54,7 +50,14 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         var s3Clients = getS3Clients(pluginConfig);
         var zooKeeperClients = getZooKeepers(pluginConfig);
         var jedisProviders = getJedisClients(pluginConfig);
-        bedrockDataService = new DataBarrelServiceImpl(hikariDataSources, s3Clients, jedisProviders, zooKeeperClients);
+        var mongoProviders = getMongoClients(pluginConfig);
+        bedrockDataService = new DataBarrelServiceImpl(
+                hikariDataSources,
+                s3Clients,
+                jedisProviders,
+                zooKeeperClients,
+                mongoProviders
+        );
         registerShutdownHook();
     }
 
@@ -122,6 +125,24 @@ public class DataBarrelBootstrap implements PluginBootstrap {
         return jedisProviders;
     }
 
+    private Map<String, MongoClient> getMongoClients(Configuration pluginConfig) {
+        var mongoConfigReader = createMongoConfigReader(pluginConfig);
+        var mongoConfigurations = mongoConfigReader.loadConfigurations();
+        Map<String, MongoClient> mongoClients = new HashMap<>();
+        for (var config : mongoConfigurations) {
+            MongoClient jedisProvider;
+            try {
+                jedisProvider = MONGO_CLIENT_FACTORY.create(config);
+            } catch (Throwable t) {
+                mongoClients.values().forEach(MongoClient::close);
+                throw new BootstrapException("Fail to load jedis config", t);
+            }
+            logger.info("Load {} MongoClient", config.name());
+            mongoClients.put(config.name(), jedisProvider);
+        }
+        return mongoClients;
+    }
+
     private Map<String, CuratorFramework> getZooKeepers(Configuration pluginConfig) {
         var zooKeeperConfigReader = createZooKeeperConfigReader(pluginConfig);
         var zooKeeperConfigurations = zooKeeperConfigReader.loadConfigurations();
@@ -157,6 +178,11 @@ public class DataBarrelBootstrap implements PluginBootstrap {
     private RedisConfigReader createRedisConfigReader(Configuration config) {
         return new RedisConfigReader(logger, config.getConfigurationSection("redis"));
     }
+
+    private MongoConfigReader createMongoConfigReader(Configuration config) {
+        return new MongoConfigReader(logger, config.getConfigurationSection("mongo"));
+    }
+
 
     private ZooKeeperConfigReader createZooKeeperConfigReader(Configuration config) {
         return new ZooKeeperConfigReader(logger, config.getConfigurationSection("zookeeper"));

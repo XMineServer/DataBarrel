@@ -1,7 +1,10 @@
 package org.skyisland.databarrel;
 
+import com.mongodb.client.MongoClient;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import redis.clients.jedis.UnifiedJedis;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -12,8 +15,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.StreamSupport;
 
 public final class DataBarrelTest {
 
@@ -27,7 +33,7 @@ public final class DataBarrelTest {
             return;
         }
         try (Connection connection = dataSource.getConnection()) {
-            logger.info("SQL: Success database connection!");
+            logger.info("SQL: Success source connection!");
 
             try (Statement stmt = connection.createStatement();
                  ResultSet rs = stmt.executeQuery("SELECT VERSION()")) {
@@ -167,5 +173,49 @@ public final class DataBarrelTest {
         storedValue = jedis.get(testKey);
         logger.info("Redis: Get test {}:{}", testKey, storedValue);
     }
+
+    public static void testMongoClient(Logger logger, String mongoClientName, DataBarrelService service) {
+        MongoClient client = service.getMongoClient(mongoClientName);
+        if (client == null) {
+            logger.error("Can't found mongo client {}", mongoClientName);
+            return;
+        }
+        logger.info("Mongo: Mongo client created");
+
+        var database = client.getDatabase("default");
+        var collection = database.getCollection("testObject", TestMongoObject.class);
+        logger.info("Mongo: Open collection {}", collection.getNamespace());
+
+        long count = collection.deleteMany(new Document()).getDeletedCount();
+        logger.info("Mongo: Delete all old objects {}", count);
+
+        var testObject = new TestMongoObject(new ObjectId(), "Test object", List.of("First", "Second", "Third"));
+        var id = collection.insertOne(testObject).getInsertedId();
+        logger.info("Mongo: Insert testObject {} {}", id, testObject);
+
+        var result = StreamSupport.stream(
+                collection.find(new Document("name", "Test object")).spliterator(),
+                false
+        ).toList();
+        logger.info("Mongo: Read all data from {}", collection.getNamespace());
+        if (result.size() != 1) {
+            throw new IllegalStateException("Wrong count of objects in source, expect 1, found %d".formatted(result.size()));
+        }
+        if (!Objects.equals(testObject, result.getFirst())) {
+            throw new IllegalStateException(
+                    "Wrong saved object. Expect %s, but found %s".formatted(
+                            testObject,
+                            result.getFirst()
+                    )
+            );
+        }
+        logger.info("Mongo: all data correct {}", result.getFirst());
+    }
+
+    public record TestMongoObject(
+            ObjectId id,
+            String name,
+            List<String> dataList
+    ) {}
 
 }

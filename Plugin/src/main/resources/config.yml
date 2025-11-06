@@ -34,3 +34,11 @@ redis:
         port: 6379
       - host: localhost
         port: 6380
+mongo:
+  default:
+    user: user
+    password: password
+    source: admin
+    servers:
+      - host: localhost
+        port: 27017

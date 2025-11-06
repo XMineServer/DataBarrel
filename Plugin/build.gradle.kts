@@ -1,4 +1,5 @@
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
+import java.util.*
 
 plugins {
     id("java-library")
@@ -9,7 +10,7 @@ plugins {
 }
 
 group = "org.skyisland"
-version = "1.0.1"
+version = "1.1.0"
 
 paper {
     name = rootProject.name
@@ -36,9 +37,10 @@ dependencies {
     api(libs.jedis)
     api(libs.curator.framework)
     api(libs.curator.recipes)
+    api(libs.mongodb.driver)
 
-    implementation("mysql:mysql-connector-java:8.0.33")
-    implementation("org.postgresql:postgresql:42.6.0")
+    implementation("com.mysql:mysql-connector-j:9.5.0")
+    implementation("org.postgresql:postgresql:42.7.8")
     implementation("com.h2database:h2:2.2.224")
     implementation(libs.hikarycp)
     implementation(libs.awssdk.s3)
@@ -48,6 +50,7 @@ dependencies {
     implementation(libs.awssdk.url)
     implementation(libs.curator.framework)
     implementation(libs.curator.recipes)
+    implementation(libs.mongodb.driver)
 
     compileOnly(libs.minecraft.api)
 
@@ -84,9 +87,9 @@ publishing {
     publications {
         create<MavenPublication>("gpr") {
             from(components["java"])
-            groupId = group.toString()
-            artifactId = rootProject.name
-            version = version.toString()
+            groupId = group.toString().lowercase(Locale.ROOT)
+            artifactId = rootProject.name.lowercase(Locale.ROOT)
+            version = version.toString().lowercase(Locale.ROOT)
         }
     }
 
